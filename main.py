@@ -1,17 +1,4 @@
-# from dotenv import load_dotenv
-import os
-
-try:
-    import dotenv
-    print("python-dotenv is installed!") 
-except ImportError:
-    print("python-dotenv is NOT installed!")
-    BOT_TOKEN = "7803010061:AAH_X9RM_EMHX8g4se6lAGbVQCIvt8RCT70"
-    
-dotenv.load_dotenv()
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-print("BOT_TOKEN:", BOT_TOKEN)
+BOT_TOKEN = "7803010061:AAH_X9RM_EMHX8g4se6lAGbVQCIvt8RCT70"
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
