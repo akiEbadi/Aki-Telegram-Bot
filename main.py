@@ -89,7 +89,7 @@ async def print_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     checklist_message = build_checklist_message(user_id, with_description=False)
     await update.message.reply_text(checklist_message, parse_mode='Markdown')
 
-async def show_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def show_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if user_id not in user_tasks:
         user_tasks[user_id] = {task: False for task in TASK_DESCRIPTIONS}
@@ -190,7 +190,7 @@ app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("reset", reset))
 app.add_handler(CommandHandler("print", print_list))
-app.add_handler(CommandHandler("show", show_list))
+app.add_handler(CommandHandler("show", show_description))
 app.add_handler(CommandHandler("help", help))
 app.add_handler(CommandHandler("add", add_task))
 app.add_handler(CommandHandler("remove", remove_task))
