@@ -1,5 +1,4 @@
 BOT_TOKEN = "7803010061:AAFM4OauyJvmNtyXeAyiXQmkjBck1sICDhM"
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
 import jdatetime
@@ -28,20 +27,24 @@ TASK_DESCRIPTIONS = {
 
 help_text = (
     "📋 راهنمای دستورات:\n\n"
-    "/start - نمایش چک‌لیست امروز.\n"
-    "/reset - ریست کردن چک‌لیست برای روز جدید.\n"
-    "/share - ارسال چک‌لیست به صورت پیام متنی برای اشتراک‌گذاری.\n"
-    "/help - نمایش این راهنما.\n"
-    "/add [عنوان تسک] - افزودن تسک جدید.\n"
-    "/remove [عنوان تسک] - حذف یک تسک از چک‌لیست."
+    #     "نمایش چک‌لیست امروز میتونی از دستور:\n"
+    #     "/start \n\n"
+    #     "ریست کردن چک‌لیست:\n"
+    #     "/reset \n\n"
+    #     "گرفتن خروجی از چک‌لیست امروز بدون توضیحات:\n"
+    #     "/print: \n\n"
+    #     "گرفتن خروجی از چک‌لیست امروز با توضیحات:\n"
+    #     "/show: \n\n"
+        "افزودن تسک جدید:\n"
+        "/add توضیحات : نام تسک جدید \n\n"
+        " حذف تسک از چک‌لیست: \n"
+        "/remove نام تسک موجود \n\n"
 )
 
-# گرفتن تاریخ شمسی
 def get_today_date():
     j_date = jdatetime.date.today()
     return j_date.year, j_date.month, j_date.day
 
-# ساخت کیبورد چک‌لیست
 def build_keyboard(user_id):
     tasks = user_tasks.get(user_id, {})
     keyboard = []
@@ -50,12 +53,10 @@ def build_keyboard(user_id):
         keyboard.append([InlineKeyboardButton(text, callback_data=task)])
     return InlineKeyboardMarkup(keyboard)
 
-# هدر چک‌لیست
 def build_header(user_id):
     year, month, day = get_today_date()
     return f"📅 تاریخ: {year}/{month}/{day}\n📚 امروز چقدر خوندی؟\nکامل ✅  اصلا نخوندم ⬜️\n\n📋 *لیست تسک‌ها:*"
 
-# راهنمای داخلی پیام
 def build_guide():
     return (
         "\n\n📚 *راهنمای بات:* \n\n"
@@ -63,17 +64,18 @@ def build_guide():
         "/start \n\n"
         "ریست کردن چک‌لیست:\n"
         "/reset \n\n"
-        "برای اشتراک‌گذاری یا گرفتن خروجی از چک‌لیست امروز:\n"
-        "/share: \n\n"
+        "گرفتن خروجی از چک‌لیست امروز بدون توضیحات:\n"
+        "/print: \n\n"
+        "گرفتن خروجی از چک‌لیست امروز با توضیحات:\n"
+        "/show_list: \n\n"
         "افزودن تسک جدید:\n"
-        "/add \[نام تسک جدید] \[(توضیحات)] \n\n"
+        "/add [نام تسک جدید] [توضیحات] \n\n"
         "حذف تسک: \n"
         "/remove [نام تسک موجود] \n\n"
         "مشاهده راهنمای کامل:\n"
         "/help"
     )
 
-# نمایش لیست تسک‌ها با راهنما
 async def show_checklist(update, context):
     user_id = update.effective_user.id
     await update.message.reply_text(
@@ -83,36 +85,45 @@ async def show_checklist(update, context):
     )
     await update.message.reply_text(build_guide(), parse_mode='Markdown')
 
-
-# ساخت پیام متنی چک‌لیست
-def build_checklist_message(user_id):
+def build_checklist_message(user_id, showDescriptions = False):
     year, month, day = get_today_date()
     message = f"📅 تاریخ: {year}/{month}/{day}\n\n📋 چک لیست:\n"
     tasks = user_tasks.get(user_id, {})
     for task, done in tasks.items():
         status = "✅" if done else "⬜️"
-        desc = TASK_DESCRIPTIONS.get(task, "بدون توضیح.")
-        message += f"{status} {task} ({desc})\n"
+        desc = user_descriptions.get(user_id, {}).get(task, TASK_DESCRIPTIONS.get(task, "بدون توضیح"))
+        if showDescriptions:
+            message += f"{status} {task} ({desc})\n"
+        else:
+             message += f"{status} ({desc})\n"
     return message
 
-# ارسال چک‌لیست به صورت پیام متنی
-async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def print_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if user_id not in user_tasks:
         user_tasks[user_id] = {task: False for task in TASK_DESCRIPTIONS}
-    checklist_message = build_checklist_message(user_id)
+    showDescriptions = False
+    checklist_message = build_checklist_message(user_id, showDescriptions)
+    await update.message.reply_text(checklist_message, parse_mode='Markdown')
+    await update.message.reply_text(help_text)
+    
+async def show_list_with_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    if user_id not in user_tasks:
+        user_tasks[user_id] = {task: False for task in TASK_DESCRIPTIONS}
+    showDescriptions = True
+    checklist_message = build_checklist_message(user_id, showDescriptions)
     await update.message.reply_text(checklist_message, parse_mode='Markdown')
     await update.message.reply_text(help_text)
 
-# دستور راهنما
-async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def show_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(help_text)
 
-# شروع بات
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if user_id not in user_tasks:
         user_tasks[user_id] = {task: False for task in TASK_DESCRIPTIONS}
+        user_descriptions[user_id] = {task: TASK_DESCRIPTIONS.get(task, "بدون توضیح.") for task in TASK_DESCRIPTIONS}
     welcome_message = (
         "سلام! به بات مطالعه PTE خوش اومدی 🌱\n"
         "تسک‌های امروزت رو تیک بزن و پیشرفتت رو ثبت کن. \n"
@@ -127,7 +138,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown'
     )
 
-# دکمه کلیک شده
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = query.from_user.id
@@ -139,10 +149,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=build_keyboard(user_id),
         parse_mode='Markdown'
     )
-    desc = TASK_DESCRIPTIONS.get(task, "توضیحی موجود نیست.")
+    desc = user_descriptions.get(user_id, {}).get(task, TASK_DESCRIPTIONS.get(task, "توضیحی موجود نیست."))
     await query.answer(desc)
 
-# ریست چک‌لیست
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if user_id in user_tasks:
@@ -151,37 +160,42 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         year, month, day = get_today_date()
         await update.message.reply_text(f"♻️ چک‌لیست برای تاریخ {year}/{month}/{day} ریست شد.\nبرای شروع دوباره /start بزن.")
 
-# افزودن تسک جدید
 async def add_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if len(context.args) == 0:
-        await update.message.reply_text("لطفاً نام تسک را وارد کنید. مثال:\n /add RMCS")
+        await update.message.reply_text("لطفاً نام تسک را وارد کنید. مثال:\n /add RMCS توضیح مربوطه")
         return
-    task_name = " ".join(context.args)
-    user_tasks.setdefault(user_id, {})[task_name] = False
-    await update.message.reply_text(f"✅ تسک جدید \"{task_name}\" اضافه شد.")
-    # TODO: show help
+    task_name = context.args[0]
+    description = " ".join(context.args[1:]) if len(context.args) > 1 else "بدون توضیح."
 
-# حذف تسک
+    user_tasks.setdefault(user_id, {})[task_name] = False
+    user_descriptions.setdefault(user_id, {})[task_name] = description
+
+    await update.message.reply_text(f"✅ تسک جدید \"{task_name}\" با توضیح اضافه شد.")
+    await show_checklist(update, context)
+
 async def remove_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if len(context.args) == 0:
-        await update.message.reply_text("لطفاً نام تسکی که می‌خواهید حذف شود را وارد کنید. مثال: /remove Listening")
+        await update.message.reply_text("لطفاً نام تسکی که می‌خواهید حذف شود را وارد کنید. مثال:\n /remove RMCS")
         return
     task_name = " ".join(context.args)
     if user_id in user_tasks and task_name in user_tasks[user_id]:
         del user_tasks[user_id][task_name]
+        if user_id in user_descriptions and task_name in user_descriptions[user_id]:
+            del user_descriptions[user_id][task_name]
         await update.message.reply_text(f"❌ تسک \"{task_name}\" حذف شد.")
     else:
         await update.message.reply_text("❗️ تسک پیدا نشد.")
+    await show_checklist(update, context)
 
-# اجرای بات
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("reset", reset))
-app.add_handler(CommandHandler("share", share))
-app.add_handler(CommandHandler("help", help))
+app.add_handler(CommandHandler("print", print_list))
+app.add_handler(CommandHandler("show", show_list_with_description))
+app.add_handler(CommandHandler("help", show_help))
 app.add_handler(CommandHandler("add", add_task))
 app.add_handler(CommandHandler("remove", remove_task))
 app.add_handler(CallbackQueryHandler(button_handler))
