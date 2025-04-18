@@ -1,4 +1,5 @@
-BOT_TOKEN = "7803010061:AAFM4OauyJvmNtyXeAyiXQmkjBck1sICDhM"
+import os
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
