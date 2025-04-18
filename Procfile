@@ -1,0 +1,1 @@
+worker: python3 AKI_PTE_BOT/main.py
