@@ -38,12 +38,12 @@ def build_keyboard(user_id):
 
 def build_header(user_id):
     year, month, day = get_today_date()
-    return f"📅 تاریخ: {year}/{month}/{day}\n📚 امروز چقدر خوندی؟\nکامل ✅  اصلا نخوندم ⬜️\n\n📋 *لیست تسک‌ها:*"
+    return f"📅 تاریخ: {year}/{month}/{day}\n📚 امروز چقدر خوندی؟\nکامل ✅  اصلا نخوندم ⬜️"
 
 def build_guide():
     return (
         "\n\n📚 *راهنمای بات:* \n\n"
-        "نمایش چک‌لیست امروز میتونی از دستور:\n"
+        "نمایش چک‌لیست امروز:\n"
         "/start \n\n"
         "ریست کردن چک‌لیست:\n"
         "/reset \n\n"
@@ -52,7 +52,7 @@ def build_guide():
         "گرفتن خروجی از چک‌لیست امروز با توضیحات:\n"
         "/show: \n\n"
         "افزودن تسک جدید:\n"
-        "/add نام تسک جدید : توضیحات   \n\n"
+        "/add نام تسک جدید : توضیحات   \n"
         "/add Task Name : Description   \n\n"
         "حذف تسک: \n"
         "/remove نام تسک موجود \n\n"
@@ -61,7 +61,9 @@ def build_guide():
         "بازگرداندن تسک‌های پیش‌فرض:\n"
         "/restoredefaults \n\n"
         "مشاهده راهنمای کامل:\n"
-        "/help"
+        "/help\n\n"
+        "📋 *لیست تسک‌ها:*\n"
+        "(اگر چک‌لیست رو کلا خالی کردی، هیچ تسکی نمیبینی)"
     )
 
 async def show_checklist(update, context):
@@ -75,7 +77,7 @@ async def show_checklist(update, context):
 
 def build_checklist_message(user_id, with_description=False):
     year, month, day = get_today_date()
-    message = f"📅 تاریخ: {year}/{month}/{day}\n\n📋 چک لیست:\n"
+    message = f"📅 تاریخ: {year}/{month}/{day}\n\n📋 چک‌لیست:\n"
     tasks = user_tasks.get(user_id, {})
     for task, done in tasks.items():
         status = "✅" if done else "⬜️"
@@ -112,7 +114,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "تسک‌های امروزت رو تیک بزن و پیشرفتت رو ثبت کن. \n"
         "میتونی تسک های دلخواهت رو اضافه یا حذف کنی \n"
         "میتونی لیست تسک هایی که امروز مطالعه کردی به اشتراک بذاری \n"
-        "میتونی برای فردا چک لیستت رو ریست کنی ولی یادت نره قبلش از چک لیست امروز یه خروجی بگیری"
+        "میتونی برای فردا چک‌لیستت رو ریست کنی ولی یادت نره قبلش از چک‌لیست امروز یه خروجی بگیری"
     )
     await update.message.reply_text(welcome_message)
     await update.message.reply_text(
@@ -162,15 +164,20 @@ async def add_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if description:
         user_descriptions.setdefault(user_id, {})[task_name] = description
-        await update.message.reply_text(f"✅ تسک جدید \"{task_name}\" با توضیح ذخیره شد.")
+        await update.message.reply_text(f"✅ تسک جدید \"{task_name}\" با توضیح ذخیره شد.\n\n"
+                                        "/start : برای مشاهده لیست تسک‌ها\n"
+                                        "/help : راهنمای دستورات")
     else:
-        await update.message.reply_text(f"✅ تسک جدید \"{task_name}\" بدون توضیح اضافه شد.")
+        await update.message.reply_text(f"✅ تسک جدید \"{task_name}\" بدون توضیح اضافه شد.\n\n"
+                                        "/start : برای مشاهده لیست تسک‌ها\n"
+                                        "/help : راهنمای دستورات")
 
 async def remove_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if len(context.args) == 0:
         await update.message.reply_text("لطفاً نام تسکی که می‌خواهید حذف شود را وارد کنید. مثال:\n"
-                                        "/remove ASQ \n\n"
+                                        "/remove نام تسک موجود\n"
+                                        "/remove WE \n\n"
                                         "/help : راهنمای دستورات")
         return
 
@@ -185,7 +192,9 @@ async def remove_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
         del user_descriptions[user_id][task_name]
 
     if existed:
-        await update.message.reply_text(f"❌ تسک \"{task_name}\" حذف شد.")
+        await update.message.reply_text(f"❌ تسک \"{task_name}\" حذف شد.\n\n"
+                                        "/start : برای مشاهده لیست تسک‌ها\n"
+                                        "/help : راهنمای دستورات")
     else:
         await update.message.reply_text("❗️ تسک پیدا نشد.")
 
@@ -194,14 +203,21 @@ async def clear_all_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     user_tasks[user_id] = {}
     user_descriptions[user_id] = {}
-    await update.message.reply_text("🗑️ تمام تسک‌ها و توضیحات برای شما حذف شدند.\nبرای افزودن تسک جدید از /add استفاده کنید.")
+    await update.message.reply_text("🗑️ تمام تسک‌ها و توضیحات برای شما حذف شدند.\n\n"
+                                    "/start : برای مشاهده لیست تسک‌ها\n"
+                                    "/restoredefaults : برای بازگردانی تسک‌های پیش‌فرض\n"
+                                    "/add : برای افزودن تسک‌ جدید\n"
+                                    "/help : راهنمای دستورات")
 
 # بازگرداندن تسک‌های پیش‌فرض
 async def restore_default_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     user_tasks[user_id] = {task: False for task in TASK_DESCRIPTIONS}
     user_descriptions[user_id] = TASK_DESCRIPTIONS.copy()
-    await update.message.reply_text("✅ تسک‌های پیش‌فرض با توضیحاتشان بازگردانی شدند.\nبرای مشاهده لیست /start را بزنید.")
+    await update.message.reply_text("✅ تسک‌های پیش‌فرض با توضیحاتشان بازگردانی شدند.\n\n"
+                                    "/start : برای مشاهده لیست تسک‌ها\n"
+                                    "/remove : برای حذف یکی از تسک‌های موجود \n"
+                                    "/help : راهنمای دستورات")
 
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
