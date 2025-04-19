@@ -10,3 +10,4 @@ env/
 .vscode/
 .dockerignore
 Dockerfile
+dev.py

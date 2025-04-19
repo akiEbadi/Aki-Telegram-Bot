@@ -56,6 +56,10 @@ def build_guide():
         "/add Task Name : Description   \n\n"
         "حذف تسک: \n"
         "/remove نام تسک موجود \n\n"
+            "حذف تمام تسک‌ها و توضیحات:\n"
+        "/clearall \n\n"
+        "بازگرداندن تسک‌های پیش‌فرض:\n"
+        "/restoredefaults \n\n"
         "مشاهده راهنمای کامل:\n"
         "/help"
     )
@@ -185,6 +189,21 @@ async def remove_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❗️ تسک پیدا نشد.")
 
+# حذف تمام تسک‌ها و توضیحات برای یک کاربر
+async def clear_all_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    user_tasks[user_id] = {}
+    user_descriptions[user_id] = {}
+    await update.message.reply_text("🗑️ تمام تسک‌ها و توضیحات برای شما حذف شدند.\nبرای افزودن تسک جدید از /add استفاده کنید.")
+
+# بازگرداندن تسک‌های پیش‌فرض
+async def restore_default_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    user_tasks[user_id] = {task: False for task in TASK_DESCRIPTIONS}
+    user_descriptions[user_id] = TASK_DESCRIPTIONS.copy()
+    await update.message.reply_text("✅ تسک‌های پیش‌فرض با توضیحاتشان بازگردانی شدند.\nبرای مشاهده لیست /start را بزنید.")
+
+
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
@@ -194,6 +213,8 @@ app.add_handler(CommandHandler("show", show_description))
 app.add_handler(CommandHandler("help", help))
 app.add_handler(CommandHandler("add", add_task))
 app.add_handler(CommandHandler("remove", remove_task))
+app.add_handler(CommandHandler("clearall", clear_all_tasks))
+app.add_handler(CommandHandler("restoredefaults", restore_default_tasks))
 app.add_handler(CallbackQueryHandler(button_handler))
 
 print("🤖 Bot is running...")
