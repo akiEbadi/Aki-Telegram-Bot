@@ -1,8 +1,11 @@
-BOT_TOKEN = "7803010061:AAH_X9RM_EMHX8g4se6lAGbVQCIvt8RCT70"
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
 import jdatetime
+import os
+
+TOKEN = os.getenv("TOKEN")
+if not TOKEN:
+    raise ValueError("TOKEN is not set! Please check your Railway Environment Variables.")
 
 user_tasks = {}
 user_descriptions = {}
@@ -220,7 +223,7 @@ async def restore_default_tasks(update: Update, context: ContextTypes.DEFAULT_TY
                                     "/help : راهنمای دستورات")
 
 
-app = ApplicationBuilder().token(BOT_TOKEN).build()
+app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("reset", reset))
